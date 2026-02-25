@@ -1,28 +1,20 @@
-# Environment & secrets
+# Secrets & tokens (never commit these)
 .env
 .tokens.json
 
 # Python
 .venv/
+venv/
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
-*.egg
 *.egg-info/
 dist/
 build/
-.eggs/
-.venv/
-venv/
-env/
-pip-wheel-metadata/
 
 # IDE
 .vscode/
 .idea/
 *.swp
-*.swo
 
 # macOS
 .DS_Store
