@@ -75,13 +75,20 @@ def _api_headers(token: str) -> dict:
 
 
 def _get_access_token(cfg: dict) -> str:
+    import time
+
+    # Return cached token if it's still valid (with 60s buffer)
+    if cfg.get("access_token") and cfg.get("access_token_expiry"):
+        if time.time() < cfg["access_token_expiry"] - 60:
+            return cfg["access_token"]
+
     resp = requests.post(
         f"{cfg['accounts_url']}/oauth/v2/token",
         params={
             "refresh_token": cfg["refresh_token"],
-            "client_id": cfg["client_id"],
+            "client_id":     cfg["client_id"],
             "client_secret": cfg["client_secret"],
-            "grant_type": "refresh_token",
+            "grant_type":    "refresh_token",
         },
         timeout=15,
     )
@@ -91,6 +98,10 @@ def _get_access_token(cfg: dict) -> str:
     if "access_token" not in data:
         sys.exit(f"Token refresh failed: {data}")
 
+    # Cache the token with its expiry time
+    cfg["access_token"] = data["access_token"]
+    cfg["access_token_expiry"] = time.time() + data.get("expires_in", 3600)
+
     # Keep base_url in sync with what Zoho reports
     if "api_domain" in data:
         region = (
@@ -99,9 +110,9 @@ def _get_access_token(cfg: dict) -> str:
             .replace("https://zohoapis.", "")
         )
         cfg["base_url"] = f"https://mail.zoho.{region}"
-        save_config(cfg)
 
-    return data["access_token"]
+    save_config(cfg)
+    return cfg["access_token"]
 
 
 def _fetch_raw_accounts(cfg: dict, token: str) -> list:
